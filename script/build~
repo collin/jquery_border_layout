@@ -1,0 +1,54 @@
+#!/usr/bin/env ruby
+require 'rubygems'
+require 'erb'
+
+raise "YOU NEED A GEM: gem install collin-continuous_builder" unless require 'continuous_builder'
+raise "YOU NEED A GEM: gem install haml" unless require 'haml'
+
+require 'sass'
+require 'pathname'
+Pathname.send :alias_method, '/', '+'
+
+class BorderLayoutBuilder < ContinuousBuilder
+  Root = Pathname.new(File.dirname __FILE__)/'..'
+  watches :javascript,
+    :files => Root/'javascripts'/'**'/'*.js',
+    :update => :build_javascript
+  
+  watches :sass,
+    :files => Root/'stylesheets'/'**'/'*.sass',
+    :module => Sass
+
+  watches :css,
+    :files => Root/'stylesheets'/'**'/'*.css',
+    :update => :build_javascript
+
+  def build_javascript path
+    scripts = []
+          
+    stylesheets = Pathname.glob(Root/'stylesheets'/'**'/'*.css').map do |sheet|
+      flat = sheet.read
+      flat.gsub!("\n", "")
+      flat.gsub!("\r\n", "")
+      flat.gsub! /\/\*.*\*\//, "" 
+      flat.gsub! /\"/ , "\\\""
+     
+      Haml::Engine.new("%style #{flat}").render.gsub("\r\n", "").gsub!("\n", "")
+    end.join('')
+    
+    scripts << StringIO.new(%{
+;(jQuery(function() {
+  jQuery("head").append("#{stylesheets}");
+});    
+})
+    scripts << (Root/'javascripts'/'border_layout.js')
+    
+    f = File.open(Root/'jquery.border_layout-0.0.0.js', 'w+')
+    f.write scripts.map{|script| script.read}.join("\n\n")
+    f.close()
+  end
+end
+
+builder = BorderLayoutBuilder.new
+builder.build_all
+builder.build_continuously
