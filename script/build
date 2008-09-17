@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 require 'rubygems'
 require 'erb'
+require 'fileutils'
 
 raise "YOU NEED A GEM: gem install collin-continuous_builder" unless require 'continuous_builder'
 raise "YOU NEED A GEM: gem install haml" unless require 'haml'
@@ -22,6 +23,21 @@ class BorderLayoutBuilder < ContinuousBuilder
   watches :css,
     :files => Root/'stylesheets'/'**'/'*.css',
     :update => :build_javascript
+
+  watches :haml,
+    :files => Root/'haml'/'example.html.haml',
+    :module => Haml,
+    :update => :move_example
+
+  def render_build path, config
+    src = File.read(path)
+    engine = config[:module]::Engine.new(src)
+    engine.render #config[:context]
+  end
+
+  def move_example path
+    FileUtils.mv(path, Root)
+  end
 
   def build_javascript path
     scripts = []

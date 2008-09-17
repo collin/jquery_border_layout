@@ -1,26 +1,45 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
   <head>
     <title>now... With jQuery</title>
-    <script src="javascripts/jquery-1.2.3.pack.js?1210880123" type="text/javascript"></script>
-    <script src="jquery.border_layout-0.0.0.js?1211390549" type="text/javascript"></script>
+    <script src='javascripts/jquery-1.2.3.pack.js?'></script>
+    <script src='jquery.border_layout-0.0.0.js?'></script>
+    <style>
+      #document {
+        width: 250px;
+        background-color: pink; }
+      
+      #canvas #button-strip {
+        background-color: black;
+        height: 40px; }
+      #canvas #preview {
+        background-color: orange; }
+      
+      #styles {
+        width: 250px;
+        background-color: #ccccff; }
+      
+      #bottom {
+        height: 100px;
+        background-color: #ffccff; }
+      
+      #right {
+        width: 100px;
+        background-color: #ffffcc; }
+      
+      #left {
+        width: 100px;
+        background-color: #777777; }
+    </style>
   </head>
   <body class='border-layout'>
-    <div class='west split tree' id='document'>
-    </div>
+    <div class='west split tree' id='document'></div>
     <div class='center border-layout' id='canvas'>
-      <div class='north split' id='button-strip'>
-      </div>
-      <div class='west' id='left'>
-      </div>
-      <div class='east split' id='right'>
-      </div>
-      <div class='center' id='preview'>
-      </div>
+      <div class='north split' id='button-strip'></div>
+      <div class='west split' id='left'></div>
+      <div class='east' id='right'></div>
+      <div class='center' id='preview'></div>
     </div>
-    <div class='east split' id='styles'>
-    </div>
-    <div class='south split' id='bottom'>
-    </div>
+    <div class='east split' id='styles'></div>
+    <div class='south split' id='bottom'></div>
   </body>
 </html>

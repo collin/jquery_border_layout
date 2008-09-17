@@ -94,7 +94,7 @@ BorderLayout.Split = {
         _('.splitter.proxy.ns').css('top', e.pageY - (_('.splitter.proxy.ns').height() / 2));
       },
 
-      region = _(this).parent();tim
+      region = _(this).parent();
       var releaseHandler = function(e) {
         _(document.body)
           .unbind('mousemove')
@@ -126,7 +126,7 @@ BorderLayout.Split = {
         _(document.body)
           .unbind('mousemove')
           .unbind('mouseup')
-          .('cursor', 'default');
+          .css('cursor', 'default');
           
         var width;
         _('.splitter.proxy.ew').remove();
