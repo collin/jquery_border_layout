@@ -1,24 +1,29 @@
-window._ = jQuery;
+;(function(_) {
 
 BorderLayout = {
   init: function() {
     _.extend(this, this.Selectors);
     _.extend(this.Split, this.Selectors);
-    this.handlesResize()
-    this.Split.init();
+    return this
+      .handlesResize()
+      .Split
+        .init();
   }
   ,handlesResize: function() {
     var that = this;
     _(window).resize(function() { that.doLayouts(); });
-    setTimeout(function(){that.doLayouts();}, 100);
+    setTimeout(function(){that.doLayouts();}, 0)
+    return this.doLayouts();
   }
   ,doLayouts: function(context) {
     var that = this;
     _(this.selector, context).each(function(i, el) { that.doLayout(el); });
+    return this;
   }
   ,doLayout: function(el) {
-    this.layoutHorizontal(el);
-    this.layoutVertical(el);
+    return this
+      .layoutHorizontal(el)
+      .layoutVertical(el);
   }
   ,layoutHorizontal: function(el) {
     this.center(el).css('width', this.container(el).width() - this.sidesWidth(el));
@@ -26,6 +31,7 @@ BorderLayout = {
     this.east(el).css('left', this.eastOffsetLeft(el));
     this.split(this.east(el)).css('right', this.east(el).width());
     this.split(this.west(el)).css('left', this.west(el).width());
+    return this;
   }
   ,layoutVertical: function(el) {
     this.center(el).css('height', this.innerHeight(el));
@@ -37,6 +43,7 @@ BorderLayout = {
     this.south(el).css('top', this.southOffsetTop(el));
     this.split(this.north(el)).css('top', this.north(el).height());
     this.split(this.south(el)).css('bottom', this.south(el).height());
+    return this;
   }
   ,southOffsetTop: function(el) {
     return this.northAndCenterHeight(el) + this.splitHeight(el);
@@ -87,11 +94,12 @@ BorderLayout.Split = {
         _('.splitter.proxy.ns').css('top', e.pageY - (_('.splitter.proxy.ns').height() / 2));
       },
 
-      region = _(this).parent();
+      region = _(this).parent();tim
       var releaseHandler = function(e) {
-        _(document.body).unbind('mousemove');
-        _(document.body).unbind('mouseup');
-        _(document.body).css('cursor', 'default');
+        _(document.body)
+          .unbind('mousemove')
+          .unbind('mouseup')
+          .css('cursor', 'default');
         var height;
         _('.splitter.proxy.ns').remove();
         if(region.is('.north')) {
@@ -115,9 +123,11 @@ BorderLayout.Split = {
       },
 	region = _(this).parent();
       var releaseHandler = function(e) {
-        _(document.body).unbind('mousemove');
-        _(document.body).unbind('mouseup');
-        _(document.body).css('cursor', 'default');
+        _(document.body)
+          .unbind('mousemove')
+          .unbind('mouseup')
+          .('cursor', 'default');
+          
         var width;
         _('.splitter.proxy.ew').remove();
         if(region.is('.west')) {
@@ -164,13 +174,7 @@ BorderLayout.Selectors = {
   }
 };
 
-var Tree = {
-  init: function() {
-  
-  }
-};
-
-_(document).ready(function() { 
-  BorderLayout.init(); 
-  Tree.init();
+_(function() {
+  BorderLayout.init();
 });
+})(jQuery);
