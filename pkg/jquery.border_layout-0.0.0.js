@@ -6,8 +6,18 @@
 
 ;(function(_) {
   var selectors = {
-    border_layout = ".border-layout"
-  };
+      border_layout = ".border-layout"
+      ,split: ".splita"
+      ,ns_split_bar: ".north > .splitter, .south > .splitter"
+      ,ew_split_bar: ".east > .splitter, .west > .splitter"
+    }
+    ,markup = {
+      ,split_bar: '<div class="splitter" />'
+      ,ns_split_proxy: '<div class="splitter proxy ns" />'
+      ,ew_split_proxy: '<div class="splitter proxy ew" />' 
+    }
+    ,_body = _(document.body)
+    ,_window = _(window);
 
   _.fn.extend({
     init_border_layout: function() {
@@ -126,83 +136,87 @@
       return this.border_split('east').height()
            + this.border_split('west').height();
     }
+    
+    ,init_split_handles: function() {
+      return this.creates_handles():
+    }
+    
+    ,creates_handles: function() {
+      var that = this;
+      this.find(selectors.split).append(markup.split_bar);
+      
+      _(selectors.ew_split_bar).drags_split_bars({
+        proxy: dom.ew_split_proxy
+        ,dimension: 'width'
+        ,origin: 'left'
+        ,regions: {
+          '.west': function(e) {
+            return this.width() 
+                 + (e.pageX - ( this.width() 
+                              + this.offset().left));
+          }
+          ,'.east': function(e) {
+            return this.width() 
+                + (this.offset().left - e.pageX);
+          }
+        }
+      });
+      
+      _(selectors.ns_split_bar).drags_split_bars({
+        proxy: dom.ns_split_proxy
+        ,dimension: 'height'
+        ,origin: 'top'
+        ,regions: {
+          '.north': function(e) {
+            return region.height() 
+                 + (e.pageY - (  this.height() 
+                                + this.offset().top));
+          }
+          ,'.south': function(e) {
+            return this.height() 
+                + (this.offset().top - e.pageY);
+          }
+        }
+      });
+    }
+    
+    ,drags_split_bars: function(options) {
+      var that = this;
+      _(options.selector).mousedown(function(e) {
+        e.preventDefault();
+        _body.css('cursor', 'ns-resize');
+        var proxy = _body.prepend(options.proxy);
+        
+        function drag_handler() {
+          proxy.css(options.origin, e.pageY - (proxy[options.dimension]()/2));
+        }
+        
+        function release_handler() {
+          var proxy_dimension = proxy[options.dimension]()
+            ,region
+            ,dimension;
+          _body
+            .unbind('mousemove.border_layout')
+            .unbind('mousemove.border_layout')
+            .css('cursor', '');
+          proxy.remove();
+          
+          for(region in options.regions) {
+            if(that.hasClass(region)) {
+              dimension = options.regions[region].call(that, e);
+          region.css(options.dimension, dimension - (proxy_dimension/2));
+          _window.resize();
+        }
+        
+        drag_handler(e);
+        
+        _body
+          .unbind('mouseup.border_layout')
+          .unbind('mousemove.border_layout');
+      });
+    }
   });
 
-  _.BorderLayout.Split = {
-    init: function() {
-      this.createsHandles();
-    }
-    ,createsHandles: function() {
-      this.allSplit().append(this.markup);
-      var that = this;
-      _('.north > .splitter, .south > .splitter').mousedown(function(e) {
-        e.preventDefault();
-        _(document.body).prepend('<div class="splitter proxy ns"></div>').css('cursor', 'ns-resize');
-        var dragHandler = function(e) {
-          _('.splitter.proxy.ns').css('top', e.pageY - (_('.splitter.proxy.ns').height() / 2));
-        },
-
-        region = _(this).parent();
-        var releaseHandler = function(e) {
-          _(document.body)
-            .unbind('mousemove')
-            .unbind('mouseup')
-            .css('cursor', 'default');
-          
-          
-          var split = _('.splitter.proxy.ns'),
-              height,
-              splitHeight = split.height();
-          
-          split.remove();
-          if(region.is('.north')) {
-            height = region.height() + (e.pageY - (region.height() + region.offset().top));
-          }
-          else if(region.is('.south')) {
-            height = region.height() + (region.offset().top - e.pageY);
-          }
-          region.css('height', height - (splitHeight/2));
-          _(window).resize();
-        };
-        dragHandler(e);
-        _(document.body).bind('mouseup', releaseHandler);
-        _(document.body).bind('mousemove', dragHandler);
-      });
-
-      _('.east > .splitter, .west > .splitter').mousedown(function(e) {
-        e.preventDefault();
-        _(document.body).prepend('<div class="splitter proxy ew"></div>').css('cursor', 'ew-resize');
-        var dragHandler = function(e) {
-          _('.splitter.proxy.ew').css('left', e.pageX - (_('.splitter.proxy.ew').width() / 2));
-        },
-	  region = _(this).parent();
-        var releaseHandler = function(e) {
-          _(document.body)
-            .unbind('mousemove')
-            .unbind('mouseup')
-            .css('cursor', 'default');
-            
-          var split = _('.splitter.proxy.ew'),
-              width,
-              splitWidth = split.width();
-              
-          split.remove();
-          if(region.is('.west')) {
-            width = region.width() + (e.pageX - (region.width() + region.offset().left));
-          }
-          else if(region.is('.east')) {
-            width = region.width() + (region.offset().left - e.pageX);
-          }
-          region.css('width', width - (splitWidth/2));
-          _(window).resize();
-        };
-        dragHandler(e);
-        _(document.body).bind('mouseup', releaseHandler);
-        _(document.body).bind('mousemove', dragHandler);
-      });
-    }
-    ,markup: '<div class="splitter"></div>'
-  }
 
   _.BorderLayout.Selectors = {
     selector: '.border-layout'
