@@ -26,7 +26,8 @@
       var that = this;
       function do_layouts() { that.do_layouts(); }
       setTimeout(do_layouts, 0);
-      return this.resize(do_layouts);
+      _window.resize(do_layouts);
+      return this;
     }
     
     ,do_layouts: function() {
@@ -39,7 +40,7 @@
     
     ,do_layout: function() {
       return this.each(function() {
-        _(this).log('do_layout')
+        _(this)
           .horizontal_border_layout()
           .vertical_border_layout();  
       });
@@ -47,7 +48,7 @@
     
     ,horizontal_border_layout: function() {
       return this
-        .border_region('center').log('horizontal center')
+        .border_region('center')
           .css({
             width: this.width() - this.sides_width()
             ,left: this.center_offset_left() 
@@ -79,7 +80,7 @@
             .css('bottom', this.border_region('south').height() || 0)
             .end()
           .end()
-        .border_split('north').log('north splitter')
+        .border_split('north')
           .css('top', this.border_region('north').height() || 0)
           .end();
     }
@@ -109,7 +110,7 @@
     }
     
     ,inner_height: function() {
-      return this.height() + this.layers_height();
+      return this.height() - this.layers_height();
     }
     
     ,north_and_center_height: function() {
@@ -146,40 +147,38 @@
     ,creates_handles: function() {
       var that = this;
       
-      this.find(selectors.split).log('split regions').append(markup.split_bar);
+      this.find(selectors.split).append(markup.split_bar);
       
-      _(selectors.ew_split_bar).drags_split_bars({
+      this.drags_split_bars({
         proxy: markup.ew_split_proxy
+        ,selector: selectors.ew_split_bar
+        ,event_property: 'pageX'
         ,dimension: 'width'
         ,origin: 'left'
         ,direction: 'ew'
         ,regions: {
-          '.west': function(e) {
-            return this.width() 
-                 + (e.pageX - ( this.width() 
-                              + this.offset().left));
+          '.west': function(e, region) {
+            return region.width() + (e.pageX - (region.width() + region.offset().left));;
           }
-          ,'.east': function(e) {
-            return this.width() 
-                + (this.offset().left - e.pageX);
+          ,'.east': function(e, region) {
+            return region.width() + (region.offset().left - e.pageX);
           }
         }
       });
       
-      _(selectors.ns_split_bar).drags_split_bars({
+      this.drags_split_bars({
         proxy: markup.ns_split_proxy
+        ,selector: selectors.ns_split_bar
+        ,event_property: 'pageY'
         ,dimension: 'height'
         ,origin: 'top'
         ,direction: 'ns'
         ,regions: {
-          '.north': function(e) {
-            return region.height() 
-                 + (e.pageY - (  this.height() 
-                                + this.offset().top));
+          '.north': function(e, region) {
+            return region.height() + (e.pageY - (region.height() + region.offset().top));
           }
-          ,'.south': function(e) {
-            return this.height() 
-                + (this.offset().top - e.pageY);
+          ,'.south': function(e, region) {
+            return region.height() + (region.offset().top - e.pageY);
           }
         }
       });
@@ -192,40 +191,44 @@
       _(options.selector).mousedown(function(e) {
         e.preventDefault();
         _body.css('cursor', options.direction+'-resize');
-        var proxy = _body.prepend(options.proxy);
+        var proxy = _(options.proxy)
+          ,region = _(this).parent();
+        _body.prepend(proxy);
         
-        function drag_handler() {
-          proxy.css(options.origin, e.pageY - (proxy[options.dimension]()/2));
+        function drag_handler(e) {
+          proxy.css(options.origin, e[options.event_property] - (proxy[options.dimension]()/2));
         }
         
-        function release_handler() {
+        function release_handler(e) {
           var proxy_dimension = proxy[options.dimension]()
-            ,region
             ,dimension;
+            
           _body
             .unbind('mousemove.border_layout')
-            .unbind('mousemove.border_layout')
+            .unbind('mouseup.border_layout')
             .css('cursor', '');
+            
           proxy.remove();
           
-          for(region in options.regions)
-            if(that.hasClass(region))
-              dimension = options.regions[region].call(that, e);
+          for(selector in options.regions) { 
+            if(region.is(selector)) {
+              dimension = options.regions[selector].call(that, e, region);
+            }
+          }
+        
           region.css(options.dimension, dimension - (proxy_dimension/2));
           _window.resize();
         }
-        
         drag_handler(e);
         
         _body
-          .bind('mouseup.border_layout')
-          .bind('mousemove.border_layout');
-          
+          .bind('mouseup.border_layout', release_handler)
+          .bind('mousemove.border_layout', drag_handler);
       });
     }
     
     ,border_region: function(which) {
-      return this.children('.'+which.split(/ /).join(':first .')+':first');
+      return this.children('.'+which.split(/ /).join(':first, .')+':first');
     }
     
     ,log: function(msg) {
