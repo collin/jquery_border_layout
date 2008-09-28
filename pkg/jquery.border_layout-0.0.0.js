@@ -5,86 +5,128 @@
 
 
 ;(function(_) {
-
-  _.BorderLayout = {
-    init: function() {
-      _.extend(this, this.Selectors);
-      _.extend(this.Split, this.Selectors);
-      return this
-        .handlesResize()
-        .Split
-          .init();
-    }
-    ,handlesResize: function() {
-      var that = this;
-      _(window).resize(function() { that.doLayouts(); });
-      setTimeout(function(){that.doLayouts();}, 0)
-      return this.doLayouts();
-    }
-    ,doLayouts: function(context) {
-      var that = this;
-      _(this.selector, context).each(function(i, el) { that.doLayout(el); });
-      return this;
-    }
-    ,doLayout: function(el) {
-      return this
-        .layoutHorizontal(el)
-        .layoutVertical(el);
-    }
-    ,layoutHorizontal: function(el) {
-      this.center(el).css('width', this.container(el).width() - this.sidesWidth(el));
-      this.center(el).css('left', this.centerOffsetLeft(el));
-      this.east(el).css('left', this.eastOffsetLeft(el));
-      this.split(this.east(el)).css('right', this.east(el).width());
-      this.split(this.west(el)).css('left', this.west(el).width());
-      return this;
-    }
-    ,layoutVertical: function(el) {
-      this.center(el).css('height', this.innerHeight(el));
-      this.west(el).css('height', this.innerHeight(el));
-      this.east(el).css('height', this.innerHeight(el));
-      this.center(el).css('top', this.innerOffsetTop(el));
-      this.west(el).css('top', this.innerOffsetTop(el));
-      this.east(el).css('top', this.innerOffsetTop(el));
-      this.south(el).css('top', this.southOffsetTop(el));
-      this.split(this.north(el)).css('top', this.north(el).height());
-      this.split(this.south(el)).css('bottom', this.south(el).height());
-      return this;
-    }
-    ,southOffsetTop: function(el) {
-      return this.northAndCenterHeight(el) + this.splitHeight(el);
-    }
-    ,westOffsetLeft: function(el) {
-      return this.container(el).offset().left;
-    }
-    ,centerOffsetLeft: function(el) {
-      return this.west(el).width() + this.split(this.west(el)).width();
-    }
-    ,eastOffsetLeft: function(el) {
-      return this.centerOffsetLeft(el) + this.center(el).width() + this.split(this.east(el)).width();
-    }
-    ,innerOffsetTop: function(el) {
-      return this.north(el).height() + this.split(this.north(el)).height();
-    }
-    ,innerHeight: function(el) {
-      return this.container(el).height() - this.layersHeight(el)
-    }
-    ,northAndCenterHeight: function(el) {
-      return this.north(el).height() + this.center(el).height();
-    }
-    ,sidesWidth: function(el) {
-      return this.east(el).width() + this.west(el).width() + this.splitWidth(el); 
-    }
-    ,layersHeight: function(el) {
-      return this.north(el).height() + this.south(el).height() + this.splitHeight(el); 
-    }
-    ,splitHeight: function(el) {
-      return this.split(this.north(el)).height() + this.split(this.south(el)).height();
-    }
-    ,splitWidth: function(el) {
-      return this.split(this.west(el)).width() + this.split(this.east(el)).width();
-    }
+  var selectors = {
+    border_layout = ".border-layout"
   };
+
+  _.fn.extend({
+    init_border_layout: function() {
+      return this
+        .init_split_handles()        
+        .handles_resize();
+    }
+    
+    ,handles_resize: function() {
+      function do_layouts() { _(this).do_layouts(); }
+      setTimeout(do_layouts, 0);
+      return this.resize(do_layouts);
+    }
+    
+    ,do_layouts: function() {
+      return this.find(selectors.border_layout).do_layout();  
+    }
+    
+    ,do_layout: function() {
+      return this.each(function() {
+        _(this)
+          .horizontal_border_layout()
+          .vertical_border_layout();  
+      });
+    }
+    
+    ,horizontal_border_layout: function() {
+      return this
+        .border_region('center')
+          .css({
+            width: this.parent().width() - this.sides_width()
+            ,left: this.cender_offset_left() 
+          })
+          .end()
+        .border_region('east')
+          .css('left', this.east_offset_left())
+          .border_split()
+            .css('right', this.border_region('east').width())
+            .end()
+          .end()
+        .border_split('west')
+          .css('left', this.border_region('west').width())
+          .end();
+    }
+    
+    ,vertical_border_layout: function() {
+      return this
+        .border_region('center west east')
+          .css(
+            height: this.inner_height()
+            ,top: this.inner_offset_top()
+          })
+          .end()
+        .border_region('south')
+          .css('top', this.south_offset_top())
+          .border_split()
+            .css('bottom', this.border_region('south').height())
+            .end()
+          .end()
+        .border_split('north')
+          .css('top', this.border_region('north').height())
+          .end();
+    }
+    
+    ,south_offset_top: function() {
+      return this.north_and_center_height() + this.split_height();
+    }
+    
+    ,west_offset_left: function() {
+      return this.offset().left();
+    }
+
+    ,center_offset_left: function() {
+      return this.border_region('west').width() 
+           + this.border_split('west').width();
+    }
+
+    ,east_offset_left: function() {
+      return this.center_offset_left()
+           + this.border_region('center').width()
+           + this.border_split('east').width();
+    }
+    
+    ,inner_offset_top: function() {
+      return this.border_region('north').height()
+           + this.border_split('north').height();
+    }
+    
+    ,inner_height: funtion() {
+      return this.height() + this.layers_height();
+    }
+    
+    ,north_and_center_height: function() {
+      return this.border_region('north').height()
+           + this.border_region('center').height();
+    }
+    
+    ,sides_width: function() {
+      return this.border_region('east').width()
+           + this.border_region('west').width()
+           + this.split_width();
+    }
+    
+    layers_height: function() {
+      return this.border_region('north').height()
+           + this.border_region('south').height()
+           + this.split_height();
+    }
+    
+    ,split_height: function() {
+      return this.border_split('north').height()
+           + this.border_split('south').height();
+    }
+    
+    ,split_width: function() {
+      return this.border_split('east').height()
+           + this.border_split('west').height();
+    }
+  });
 
   _.BorderLayout.Split = {
     init: function() {
