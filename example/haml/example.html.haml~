@@ -1,0 +1,39 @@
+%html
+  %head
+    %title== now... With jQuery
+    %script{:src=>"../javascripts/jquery-1.2.3.pack.js?"}
+    %script{:src=>"jquery.border_layout-#{Version}.js?"}
+    %style
+      :sass
+        #document
+          :width 250px
+          :background-color pink
+         
+        #canvas
+          #button-strip
+            :background-color black
+            :height 40px
+          #preview
+            :background-color orange
+         
+        #styles
+          :width 250px
+          :background-color #ccccff
+        #bottom
+          :height 100px
+          :background-color #ffccff
+        #right
+          :width 100px
+          :background-color #ffffcc
+        #left
+          :width 100px
+          :background-color #777777
+  %body.border-layout
+    #document.west.split.tree
+    #canvas.center.border-layout
+      #button-strip.north.split
+      #left.west.split
+      #right.east
+      #preview.center
+    #styles.east.split
+    #bottom.south.split

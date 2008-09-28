@@ -7,8 +7,11 @@ raise "YOU NEED A GEM: gem install collin-continuous_builder" unless require 'co
 raise "YOU NEED A GEM: gem install haml" unless require 'haml'
 
 require 'sass'
+require 'sass/plugin'
 require 'pathname'
 Pathname.send :alias_method, '/', '+'
+
+Version = "0.0.0"
 
 class BorderLayoutBuilder < ContinuousBuilder
   Root = Pathname.new(File.dirname __FILE__)/'..'
@@ -25,19 +28,8 @@ class BorderLayoutBuilder < ContinuousBuilder
     :update => :build_javascript
 
   watches :haml,
-    :files => Root/'haml'/'example.html.haml',
-    :module => Haml,
-    :update => :move_example
-
-  def render_build path, config
-    src = File.read(path)
-    engine = config[:module]::Engine.new(src)
-    engine.render #config[:context]
-  end
-
-  def move_example path
-    FileUtils.mv(path, Root)
-  end
+    :files => Root/'example'/'haml'/'example.html.haml',
+    :module => Haml
 
   def build_javascript path
     scripts = []
@@ -59,7 +51,7 @@ class BorderLayoutBuilder < ContinuousBuilder
 })
     scripts << (Root/'javascripts'/'border_layout.js')
     
-    f = File.open(Root/'jquery.border_layout-0.0.0.js', 'w+')
+    f = File.open(Root/'pkg'/"jquery.border_layout-#{Version}.js", 'w+')
     f.write scripts.map{|script| script.read}.join("\n\n")
     f.close()
   end
