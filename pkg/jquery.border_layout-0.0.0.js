@@ -215,36 +215,16 @@
           .unbind('mousemove.border_layout');
       });
     }
+    
+    ,border_region: function(which) {
+      return this.children('.'+which);
+    }
+    
+    ,border_split: function(which) {
+      if(!which) return this.children('.split')
+      return this.border_region(which).border_split();
+    }
   });
-
-
-  _.BorderLayout.Selectors = {
-    selector: '.border-layout'
-    ,container: function(el) {
-      return _(el);
-    }
-    ,center: function(el) {
-      return _(el).children('.center');
-    }
-    ,east: function(el) {
-      return _(el).children('.east');
-    }
-    ,west: function(el) {
-      return _(el).children('.west');
-    }
-    ,north: function(el) {
-      return _(el).children('.north');
-    }
-    ,south: function(el) {
-      return _(el).children('.south');
-    }
-    ,split: function(el) {
-      return _(el).children('.splitter');
-    }
-    ,allSplit: function() {
-      return _('.split');
-    }
-  };
 
   _(function() {
     _.BorderLayout.init();
