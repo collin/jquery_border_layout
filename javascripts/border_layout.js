@@ -1,38 +1,45 @@
 ;(function(_) {
   var selectors = {
-      border_layout = ".border-layout"
-      ,split: ".splita"
+      border_layout: ".border-layout"
+      ,split: ".split"
       ,ns_split_bar: ".north > .splitter, .south > .splitter"
       ,ew_split_bar: ".east > .splitter, .west > .splitter"
     }
     ,markup = {
-      ,split_bar: '<div class="splitter" />'
+      split_bar: '<div class="splitter" />'
       ,ns_split_proxy: '<div class="splitter proxy ns" />'
       ,ew_split_proxy: '<div class="splitter proxy ew" />' 
     }
-    ,_body = _(document.body)
-    ,_window = _(window);
+    ,_body
+    ,_window;
 
   _.fn.extend({
     init_border_layout: function() {
-      return this
-        .init_split_handles()        
+      _body = _(document.body);
+      _window = _(window);
+      return this      
+        .init_split_handles()  
         .handles_resize();
     }
     
     ,handles_resize: function() {
-      function do_layouts() { _(this).do_layouts(); }
+      var that = this;
+      function do_layouts() { that.do_layouts(); }
       setTimeout(do_layouts, 0);
       return this.resize(do_layouts);
     }
     
     ,do_layouts: function() {
-      return this.find(selectors.border_layout).do_layout();  
+      return this
+        .parent()
+        .find(selectors.border_layout)
+        .do_layout()
+        .end();  
     }
     
     ,do_layout: function() {
       return this.each(function() {
-        _(this)
+        _(this).log('do_layout')
           .horizontal_border_layout()
           .vertical_border_layout();  
       });
@@ -40,27 +47,28 @@
     
     ,horizontal_border_layout: function() {
       return this
-        .border_region('center')
+        .border_region('center').log('horizontal center')
           .css({
-            width: this.parent().width() - this.sides_width()
-            ,left: this.cender_offset_left() 
+            width: this.width() - this.sides_width()
+            ,left: this.center_offset_left() 
           })
           .end()
         .border_region('east')
-          .css('left', this.east_offset_left())
+          .css('left', this.east_offset_left()||0)
           .border_split()
-            .css('right', this.border_region('east').width())
+            .css('right', this.border_region('east').width()||0)
             .end()
           .end()
         .border_split('west')
-          .css('left', this.border_region('west').width())
+          .css('left', this.border_region('west').width()||0)
+          .end()
           .end();
     }
     
     ,vertical_border_layout: function() {
       return this
         .border_region('center west east')
-          .css(
+          .css({
             height: this.inner_height()
             ,top: this.inner_offset_top()
           })
@@ -68,11 +76,11 @@
         .border_region('south')
           .css('top', this.south_offset_top())
           .border_split()
-            .css('bottom', this.border_region('south').height())
+            .css('bottom', this.border_region('south').height() || 0)
             .end()
           .end()
-        .border_split('north')
-          .css('top', this.border_region('north').height())
+        .border_split('north').log('north splitter')
+          .css('top', this.border_region('north').height() || 0)
           .end();
     }
     
@@ -100,7 +108,7 @@
            + this.border_split('north').height();
     }
     
-    ,inner_height: funtion() {
+    ,inner_height: function() {
       return this.height() + this.layers_height();
     }
     
@@ -115,7 +123,7 @@
            + this.split_width();
     }
     
-    layers_height: function() {
+    ,layers_height: function() {
       return this.border_region('north').height()
            + this.border_region('south').height()
            + this.split_height();
@@ -127,22 +135,24 @@
     }
     
     ,split_width: function() {
-      return this.border_split('east').height()
-           + this.border_split('west').height();
+      return this.border_split('east').width()
+           + this.border_split('west').width();
     }
     
     ,init_split_handles: function() {
-      return this.creates_handles():
+      return this.creates_handles();
     }
     
     ,creates_handles: function() {
       var that = this;
-      this.find(selectors.split).append(markup.split_bar);
+      
+      this.find(selectors.split).log('split regions').append(markup.split_bar);
       
       _(selectors.ew_split_bar).drags_split_bars({
-        proxy: dom.ew_split_proxy
+        proxy: markup.ew_split_proxy
         ,dimension: 'width'
         ,origin: 'left'
+        ,direction: 'ew'
         ,regions: {
           '.west': function(e) {
             return this.width() 
@@ -157,9 +167,10 @@
       });
       
       _(selectors.ns_split_bar).drags_split_bars({
-        proxy: dom.ns_split_proxy
+        proxy: markup.ns_split_proxy
         ,dimension: 'height'
         ,origin: 'top'
+        ,direction: 'ns'
         ,regions: {
           '.north': function(e) {
             return region.height() 
@@ -172,13 +183,15 @@
           }
         }
       });
+      
+      return this;
     }
     
     ,drags_split_bars: function(options) {
       var that = this;
       _(options.selector).mousedown(function(e) {
         e.preventDefault();
-        _body.css('cursor', 'ns-resize');
+        _body.css('cursor', options.direction+'-resize');
         var proxy = _body.prepend(options.proxy);
         
         function drag_handler() {
@@ -195,8 +208,8 @@
             .css('cursor', '');
           proxy.remove();
           
-          for(region in options.regions) {
-            if(that.hasClass(region)) {
+          for(region in options.regions)
+            if(that.hasClass(region))
               dimension = options.regions[region].call(that, e);
           region.css(options.dimension, dimension - (proxy_dimension/2));
           _window.resize();
@@ -205,22 +218,28 @@
         drag_handler(e);
         
         _body
-          .unbind('mouseup.border_layout')
-          .unbind('mousemove.border_layout');
+          .bind('mouseup.border_layout')
+          .bind('mousemove.border_layout');
+          
       });
     }
     
     ,border_region: function(which) {
-      return this.children('.'+which);
+      return this.children('.'+which.split(/ /).join(':first .')+':first');
+    }
+    
+    ,log: function(msg) {
+      console.log(msg||'',this);
+      return this;
     }
     
     ,border_split: function(which) {
-      if(!which) return this.children('.split')
+      if(!which) return this.children('.splitter:first')
       return this.border_region(which).border_split();
     }
   });
 
   _(function() {
-    _.BorderLayout.init();
+    _(document.body).init_border_layout();
   });
 })(jQuery);
