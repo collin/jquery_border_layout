@@ -15,8 +15,6 @@
 
   _.fn.extend({
     init_border_layout: function() {
-      _body = _(document.body);
-      _window = _(window);
       return this      
         .init_split_handles()  
         .handles_resize();
@@ -243,6 +241,8 @@
   });
 
   _(function() {
-    _(document.body).init_border_layout();
+    _body = _(document.body);
+    _window = _(window);
+    _body.init_border_layout();
   });
 })(jQuery);
